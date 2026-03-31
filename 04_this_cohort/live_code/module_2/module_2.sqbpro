@@ -5,26 +5,37 @@
 /* 1. Compare how many customer_ids are the customer_purchases table, one select with distinct, one without */
 
 -- 4221 rows
-SELECT customer_id FROM customer_purchases 
+SELECT customer_id FROM customer_purchases ;
+
+SELECT DISTINCT customer_id FROM customer_purchases;
 
 
 
 /* 2. Compare the difference between selecting market_day in market_date_info, with and without distinct:
  what do these difference mean?*/
+SELECT market_day
+FROM market_date_info;
 
+-- market is only open on 2 days, wed and sat
+SELECT DISTINCT market_day
+FROM market_date_info;
  
 
 /* 3. Which vendor has sold products to a customer */
-
+SELECT DISTINCT vendor_id
+FROM customer_purchases;
 
 
 /* 4. Which vendor has sold products to a customer ... and which product was it */
-
+SELECT DISTINCT vendor_id, product_id
+FROM customer_purchases;
 
 
 /* 5. Which vendor has sold products to a customer 
 ... and which product was it? 
 ... AND to whom was it sold*/
+SELECT DISTINCT vendor_id, product_id, customer_id
+FROM customer_purchases
 
 
 --------------------------------------------------------------------------------------------------------------------------------------------
@@ -36,7 +47,16 @@ SELECT customer_id FROM customer_purchases
  ... use an INNER JOIN to see only products that have been purchased */
  
 -- without table aliases
+SELECT product_name, -- coming from the product table 
+vendor_id, -- rest of these are coming from the customer_purchases table 
+market_date,
+customer_id,
+customer_purchases.product_id,
+product.product_id
 
+FROM product
+INNER JOIN customer_purchases
+	ON customer_purchases.product_id = product.product_id;
 
 
 
@@ -46,26 +66,57 @@ SELECT customer_id FROM customer_purchases
     Add customers' first and last names with an INNER JOIN  */
 
 -- using table aliases
+SELECT DISTINCT 
+vendor_id,  -- coming from cp
+product_id, 
+c.customer_id, -- coming from c
+customer_first_name,
+customer_last_name
 
+FROM customer_purchases AS cp
+INNER JOIN customer AS c
+	ON c.customer_id = cp.customer_id
 
-
---------------------------------------------------------------------------------------------------------------------------------------------
-</sql><sql name="LEFT_JOIN">/* MODULE 2 */
+--------------------------------------------------------------------------------------------------------------------------------------------</sql><sql name="LEFT_JOIN*">/* MODULE 2 */
 /* LEFT  JOIN */
 
 
 /* 1. There are products that have been bought
 ... but are there products that have not been bought? 
 Use a LEFT JOIN to find out*/
+SELECT  DISTINCT
+p.product_id 
+,cp.product_id as [cp.product_id]
+,product_name
+
+FROM product as p
+LEFT JOIN customer_purchases as cp
+	ON p.product_id = cp.product_id;
 
 
 /* 2. Directions of LEFT JOINs matter ...*/
+SELECT  DISTINCT
+p.product_id 
+,cp.product_id as [cp.product_id]
+,product_name
 
+FROM customer_purchases as cp
+LEFT JOIN product as p
+	ON p.product_id = cp.product_id;
 
 
 
 /* 3. As do which values you filter on ... */
+SELECT  DISTINCT
+p.product_id 
+,cp.product_id as [cp.product_id]
+,product_name
 
+FROM product as p
+LEFT JOIN customer_purchases as cp
+	ON p.product_id = cp.product_id
+
+WHERE p.product_id BETWEEN 1 AND 6  -- if we pick product, 6 rows (1-6) but if we pick cp....only 5 rows because zinnias never existed in customer purchases table
 
 
 
@@ -82,10 +133,14 @@ LEFT JOIN product AS p
 ...Note how the row count changed from 24 to 23
 */	
 
+SELECT * 
+FROM product as p
+LEFT JOIN product_category as pc
+	ON pc.product_category_id = p.product_category_id
+	ORDER by pc.product_category_id
 
 
---------------------------------------------------------------------------------------------------------------------------------------------
-</sql><sql name="multiple_table_joins">/* MODULE 2 */
+--------------------------------------------------------------------------------------------------------------------------------------------</sql><sql name="multiple_table_joins">/* MODULE 2 */
 /* Multiple Table JOINs */
 
 
@@ -93,6 +148,21 @@ LEFT JOIN product AS p
     (Which vendor has sold products to a customer AND which product was it AND to whom was it sold)
 
     Replace all the IDs (customer, vendor, and product) with the names instead*/ 
+SELECT DISTINCT 
+--vendor_id
+vendor_name
+,p.product_id
+,product_name
+,c.customer_id
+,customer_first_name
+,customer_last_name
+FROM customer_purchases as cp
+INNER JOIN vendor as v
+	ON v.vendor_id = cp.vendor_id
+INNER JOIN product as p
+	ON p.product_id = cp.product_id
+INNER JOIN customer as c
+	ON c.customer_id = cp.customer_id;
 
 
 
@@ -100,5 +170,20 @@ LEFT JOIN product AS p
 ... how does this LEFT JOIN affect the number of rows? 
 
 Why do we have more rows now?*/
+SELECT product_category_name, p.*
+, cp.product_id as productid_in_cust_purchases_table
+
+FROM product_category as pc
+INNER JOIN product as p -- will give us product_name, product_size, product_qty_type
+	ON p.product_category_id = pc.product_category_id
+LEFT JOIN customer_purchases as cp
+	ON cp.product_id = p.product_id
+	
+	
+ORDER by cp.product_id
+	
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------
 
 </sql><current_tab id="4"/></tab_sql></sqlb_project>
